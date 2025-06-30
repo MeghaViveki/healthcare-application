@@ -18,23 +18,23 @@ pipeline {
             }
 
         }
-        //  stage('containerizing') {
-        //     steps {
-        //        script{
-        //          sh 'docker build -t meghaviveki/financeme-backend .'
-        //        }
-        //     }
+         stage('containerizing') {
+            steps {
+               script{
+                 bat 'docker build -t meghaviveki/healthcare-backend .'
+               }
+            }
 
-        // }
-        // stage('pushing to dockerhub') {
-        //     steps {
-        //        script{
-        //          sh "docker tag meghaviveki/financeme-backend:latest meghaviveki/financeme-backend:v${BUILD_NUMBER}"
-        //          sh " echo ${env.docker_hub_pass} | docker login -u meghaviveki --password-stdin"
-        //          sh "docker push meghaviveki/financeme-backend:v${BUILD_NUMBER}"
-        //        }
-        //     }
+        }
+        stage('pushing to dockerhub') {
+            steps {
+               script{
+                 bat "docker tag meghaviveki/healthcare-backend:latest meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
+                 bat " echo ${env.docker_hub_pass} | docker login -u meghaviveki --password-stdin"
+                 bat "docker push meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
+               }
+            }
 
-        // }
+        }
     }
 }
