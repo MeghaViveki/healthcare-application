@@ -1,40 +1,49 @@
 pipeline {
     agent any
-
+    // Run the pipeline on any available Jenkins agent
 
     stages {
         stage('clone') {
             steps {
+                // Clone the healthcare-application repository from GitHub's main branch
+                // Uses stored credentials with ID 'Megha' for authentication
                 git branch: 'main', credentialsId: 'Megha', url: 'https://github.com/MeghaViveki/healthcare-application.git'
-               
             }
-
         }
+        
         stage('Build') {
             steps {
-               script{
-                 bat 'mvn clean install'
-               }
+                script {
+                    // Run Maven build using 'mvn clean install' on Windows agent (bat command)
+                    // This compiles the application and packages it as a JAR
+                    bat 'mvn clean install'
+                }
             }
-
         }
-         stage('containerizing') {
+        
+        stage('containerizing') {
             steps {
-               script{
-                 bat 'docker build -t meghaviveki/healthcare-backend .'
-               }
+                script {
+                    // Build a Docker image named 'meghaviveki/healthcare-backend' from the current directory
+                    // Uses Dockerfile in repo root by default
+                    bat 'docker build -t meghaviveki/healthcare-backend .'
+                }
             }
-
         }
+        
         stage('pushing to dockerhub') {
             steps {
-               script{
-                 bat "docker tag meghaviveki/healthcare-backend:latest meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
-                 bat " echo ${env.docker_hub_pass} | docker login -u meghaviveki --password-stdin"
-                 bat "docker push meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
-               }
-            }
+                script {
+                    // Tag the built Docker image with the current build number for versioning
+                    bat "docker tag meghaviveki/healthcare-backend:latest meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
 
+                    // Log in to Docker Hub using stored environment variable 'docker_hub_pass' securely
+                    bat "echo ${env.docker_hub_pass} | docker login -u meghaviveki --password-stdin"
+
+                    // Push the version-tagged Docker image to Docker Hub repository
+                    bat "docker push meghaviveki/healthcare-backend:v${BUILD_NUMBER}"
+                }
+            }
         }
     }
 }

@@ -1,0 +1,43 @@
+pipeline {
+    agent any  // This pipeline can run on any available Jenkins agent
+
+    parameters {
+        string(name: 'version', defaultValue: 'latest', description: 'Enter the Docker image version/tag')
+        // Allows the user to specify the Docker image tag (e.g., v1.0, latest)
+    }
+
+    stages {
+        stage('clone') {
+            steps {
+                // Clone the GitHub repository using stored Jenkins credentials
+                git branch: 'main', 
+                    credentialsId: 'Megha', 
+                    url: 'https://github.com/MeghaViveki/finacne-banking-app.git'
+
+                // Note: Make sure the credentials ID 'Megha' is set up correctly in Jenkins
+            }
+        }
+
+        stage('Infra configuration and container deploy') {
+            steps {
+                script {
+                    // Set proper permissions on the SSH private key file for Ansible to use it
+                    sh 'chmod 400 megha-key.pem'
+
+                    // Run the Ansible playbook using the defined inventory file 'kubernetes-server'
+                    sh """
+                        ansible-playbook -i kubernetes-server ansible-playbook.yml \
+                        -u ubuntu \                         // SSH username for connecting to the node(s)
+                        --private-key megha-key.pem \       // SSH private key for authentication
+                        --extra-vars "docker_image_tag=${version}"  // Pass Docker tag as a variable
+                    """
+
+                    // Notes:
+                    // - 'kubernetes-server' is the Ansible inventory file listing target Kubernetes node(s)
+                    // - The playbook should use the 'docker_image_tag' variable to substitute the image tag
+                    // - Ensure that 'kubectl' and required files are available on the target host
+                }
+            }
+        }
+    }
+}
